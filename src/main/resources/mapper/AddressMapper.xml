@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neuedu.fruitshop.web.mapper.AddressMapper">
+
+	<!-- orm对象映射和关系映射 -->
+	<resultMap type="Address" id="addressMap">
+		<!-- id一般用于配置主键列 -->
+		<id column="addressId" property="addressId" />
+		<result column="address" property="address" />
+		<result column="consignee" property="consignee" />
+		<result column="phone" property="phone" />
+		
+		<!-- 对于关系映射可以使用association或collection进行配置 -->
+		<association property="user">
+			<result column="userId" property="userId" />
+			<result column="userName" property="userName" />
+			<result column="userPhone" property="userPhone" />
+			<result column="userEmail" property="userEmail" />
+			<result column="userAddress" property="userAddress" />
+		</association>
+	</resultMap>
+	
+	<select id="findByUser" parameterType="User" resultMap="addressMap">
+		SELECT address.addressId, address.address, address.consignee, address.phone, address.userId,
+				user.userName, user.userPhone, user.userEmail, user.userAddress
+			FROM address
+				INNER JOIN user ON address.userId = user.userId
+		<where> 
+			<if test="userId!=null">
+				user.userId = #{userId}
+			</if>
+		</where>
+		order by address.addressId desc
+	</select>
+	
+	<select id="findById" parameterType="Address" resultType="Address"> 
+		select * from address where addressId = #{addressId}
+	</select>
+
+	
+	<insert id="add" parameterType="Address">
+		insert into 
+		address(address, consignee, phone, userId)
+		values(#{address},#{consignee},#{phone},#{user.userId})
+		<selectKey keyColumn="addressId" keyProperty="addressId"
+			order="AFTER" resultType="int">
+			select last_insert_id()
+		</selectKey>
+	</insert>
+	
+	
+	<update id="edit" parameterType="Address">
+		update address
+		<set>
+			<if test="address !=null"> address = #{address},</if>
+			<if test="consignee !=null"> consignee = #{consignee},</if>
+			<if test="phone !=null"> phone = #{phone},</if>
+			<!-- 不能修改自己的编号 -->
+			<!-- <if test="userId !=null"> userId = #{userId},</if> -->
+		</set>
+		where addressId = #{addressId}
+	</update>
+	
+	<delete id="deleteByIds" parameterType="list">
+		<if test="list!=null and list.size !=0">
+			DELETE from address where addressId in
+			<foreach collection="list" item="address" open="("
+				separator="," close=")">
+				#{address.addressId}
+			</foreach>
+		</if>
+	</delete>
+	
+	<delete id="deleteById" parameterType="Address">
+		<if test="addressId!=null">
+			DELETE from address where addressId = #{addressId}
+		</if>
+	</delete>
+
+</mapper>

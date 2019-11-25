@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neuedu.fruitshop.sys.mapper.FruitMapper">
+
+	<!-- orm对象映射和关系映射 -->
+	<resultMap type="Fruit" id="fruitMap">
+		<!-- id一般用于配置主键列 -->
+		<id column="fruitId" property="fruitId" />
+		<result column="fruitName" property="fruitName" />
+		<result column="fruitImage" property="fruitImage" />
+		<result column="fruitPrice" property="fruitPrice" />
+		<result column="fruitUnit" property="fruitUnit" />
+		<result column="putawayTime" property="putawayTime" />
+		<result column="fruitStates" property="fruitStates" />
+		<!-- 对于关系映射可以使用association或collection进行配置 -->
+		<association property="type">
+			<result column="typeId" property="typeId" />
+			<result column="typeName" property="typeName" />
+		</association>
+		<association property="provider">
+			<result column="providerId" property="providerId" />
+			<result column="providerName" property="providerName" />
+		</association>
+		<association property="admin">
+			<result column="adminId" property="adminId" />
+			<result column="adminName" property="adminName" />			
+		</association>
+	</resultMap>
+
+
+	<select id="findListByPager" parameterType="Pager"
+		resultMap="fruitMap">
+		select f.*,t.typeName,p.providerName,a.adminName from fruit f,type t,provider p,admin a
+		where f.typeId=t.typeId and f.providerId=p.providerId and f.adminId=a.adminId 
+	
+			<!-- 按名称查询 -->
+			<if test="condition !=null  and condition.fruitName != null">
+				and fruitName like concat('%',concat(#{condition.fruitName},'%'))
+			</if>
+			<!-- 按类型查询 -->
+			<if test="condition!=null and condition.type != null and condition.type.typeId != null">
+				and t.typeId = #{condition.type.typeId}
+			</if>
+			<!-- 按供货商查询 -->
+			<if test="condition !=null and condition.provider != null and condition.provider.providerId != null">
+				and p.providerId = #{condition.provider.providerId}
+			</if>
+			<!-- 按状态查询 -->
+			<if test="condition !=null and condition.fruitStates != null">
+				and fruitStates= #{condition.fruitStates}
+			</if>
+			
+		order by f.fruitId desc
+		LIMIT #{start},#{size}
+
+	</select>
+
+	<select id="findTotalByPager" parameterType="Pager"
+		resultType="int">
+		select count(*) from fruit f,type t,provider p,admin a 
+		where f.typeId=t.typeId and f.providerId=p.providerId and f.adminId=a.adminId 
+		    <!-- 按名称查询 -->
+			<if test="condition !=null  and condition.fruitName != null">
+				and fruitName like concat('%',concat(#{condition.fruitName},'%'))
+			</if>
+			<!-- 按类型查询 -->
+			<if test="condition!=null and condition.type != null and condition.type.typeId != null">
+				and t.typeId = #{condition.type.typeId}
+			</if>
+			<!-- 按供货商查询 -->
+			<if test="condition !=null and condition.provider != null and condition.provider.providerId != null">
+				and p.providerId = #{condition.provider.providerId}
+			</if>
+			<!-- 按状态查询 -->
+			<if test="condition !=null and condition.fruitStates != null">
+				and fruitStates= #{condition.fruitStates}
+			</if>
+		
+	</select>
+	
+	<insert id="add" parameterType="Fruit">
+		insert into 
+		fruit(fruitName,fruitImage,fruitPrice,fruitUnit,putawayTime,typeId,providerId,adminId,fruitStates)
+		values(#{fruitName},#{fruitImage},#{fruitPrice},#{fruitUnit},#{putawayTime},#{type.typeId},#{provider.providerId},#{admin.adminId},#{fruitStates})
+		<!-- goods_id是自增列，可以通过selectkey 查询自增列的值，并绑定到对于的属性中 -->
+		<selectKey keyColumn="fruitid" keyProperty="fruitId"
+			order="AFTER" resultType="int">
+			select last_insert_id()
+		</selectKey>
+	</insert>
+	
+	
+	<update id="edit" parameterType="Fruit">
+		update fruit
+		<set>
+			<if test="fruitName !=null"> fruitName = #{fruitName},</if>
+			<if test="fruitImage !=null"> fruitImage = #{fruitImage},</if>
+			<if test="fruitPrice !=null"> fruitPrice = #{fruitPrice},</if>
+			<if test="fruitUnit !=null"> fruitUnit = #{fruitUnit},</if>
+			<if test="putawayTime !=null"> putawayTime = #{putawayTime},</if>
+			<if test="type !=null and type.typeId"> typeId = #{type.typeId},</if>
+			<if test="provider !=null and provider.providerId"> providerId = #{provider.providerId},</if>
+			<if test="admin !=null and admin.adminId"> adminId = #{admin.adminId},</if>
+			<if test="fruitStates !=null"> fruitStates = #{fruitStates},</if>
+		</set>
+		where fruitId = #{fruitId}
+	</update>
+	
+	<delete id="deleteByIds" parameterType="list">
+		<if test="list!=null and list.size !=0">
+			DELETE from fruit where fruitId in
+			<foreach collection="list" item="fruit" open="("
+				separator="," close=")">
+				#{fruit.fruitId}
+			</foreach>
+		</if>
+	</delete>
+	
+	<!-- 前台 -->
+	<!-- 推荐商品板块   根据上架时间查询 -->
+	<select id="findNewest" resultMap="fruitMap">
+		SELECT fruitId,fruitName,fruitImage,fruitPrice,putawayTime,fruitUnit
+		     from fruit 
+		        order BY putawayTime DESC 
+		     LIMIT 5
+	</select>
+	<!-- 促销商品板块  根据价格查询 -->
+	<select id="findPromotion" resultMap="fruitMap">
+		SELECT fruitId,fruitName,fruitImage,fruitPrice,putawayTime,fruitUnit from fruit 
+		    <where>
+		            fruitPrice &lt;=9.9
+		    </where>
+		        order BY putawayTime DESC 
+		     LIMIT 5
+	</select>
+	
+	<!-- 当季新品板块  根据类型查询 -->
+	<select id="findByType" resultMap="fruitMap">
+		SELECT f.*,t.typeName from fruit f, type t where  f.typeId=t.typeId
+		      and t.typeId=#{type.typeId}
+	</select>
+	
+	<!-- 国产优选板块   根据供应商查询 -->
+	<select id="findByProvider" resultMap="fruitMap">
+		SELECT f.*,p.providerAddress 
+		from fruit f, provider p 
+		WHERE f.providerId=p.providerId
+		and p.providerId=#{provider.providerId}
+	</select>
+	
+	<!-- 促销中心页面 -->
+	<select id="findAllPromotion" resultMap="fruitMap">
+		SELECT fruitId,fruitName,fruitImage,fruitPrice,putawayTime,fruitUnit from fruit 
+		    <where>
+		            fruitPrice &lt;=9.9
+		    </where>
+		        order BY putawayTime DESC 
+	</select>
+	
+	<!-- 水果详情页面 -->
+	<select id="findByFruitId" resultMap="fruitMap">
+	 select f.*,t.typeName,p.providerName from fruit f,type t,provider p
+	 WHERE f.typeId=t.typeId and f.providerId=p.providerId
+	 and f.fruitId=#{fruitId}
+	</select>
+
+</mapper>

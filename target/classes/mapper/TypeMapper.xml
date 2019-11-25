@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neuedu.fruitshop.sys.mapper.TypeMapper">
+    <sql id="selectsql">
+       SELECT typeId,typeName,typeImage from type
+    </sql>
+    <select id="findAll" resultType="Type">
+		<include refid="selectsql" />
+	</select>
+	
+	<select id="findListByPager" parameterType="Pager"
+		resultType="Type">
+		<include refid="selectsql" />
+		<where>
+			<if test="condition !=null and condition.typeName != null"> 
+			typeName like concat('%',concat(#{condition.typeName},'%')) 
+		    </if>
+		</where>
+		limit #{start},#{size}
+	</select>
+
+	<select id="findTotalByPager" parameterType="Pager"
+		resultType="int">
+		select count(*) from type
+		<where>
+			<if test="condition !=null and condition.typeName != null"> 
+			typeName like concat('%',concat(#{condition.typeName},'%')) 
+			</if>
+		</where>
+	</select>
+
+	<select id="findById" parameterType="int" resultType="Type">
+		<include refid="selectsql" /> 
+		where typeId = #{typeId}
+	</select>
+	
+	<insert id="add" parameterType="Type">
+		insert into type(typeName,typeImage)
+		values(#{typeName},#{typeImage}) 
+		<!-- goods_id是自增列，可以通过selectkey 查询自增列的值，并绑定到对于的属性中 -->
+		<selectKey keyColumn="typeId" keyProperty="typeId"
+			order="AFTER" resultType="int">
+			select last_insert_id()
+		</selectKey>
+	</insert>
+	
+	<update id="edit" parameterType="Type">
+		update type
+		<set>
+			<if test="typeName !=null"> typeName = #{typeName},</if>
+			<if test="typeImage !=null"> typeImage = #{typeImage},</if>
+		</set>
+		where typeId = #{typeId}
+	</update>
+	
+	<delete id="deleteByIds" parameterType="list">
+		<if test="list!=null and list.size !=0">
+			DELETE from type where typeId in
+			<foreach collection="list" item="type" open="("
+				separator="," close=")">
+				#{type.typeId}
+			</foreach>
+		</if>
+	</delete>
+
+
+</mapper>

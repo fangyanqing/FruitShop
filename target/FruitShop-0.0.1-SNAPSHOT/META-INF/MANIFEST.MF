@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Created-By: IntelliJ IDEA
+Built-By: YCP
+Build-Jdk: 1.8.0_92
+Implementation-Title: FruitShop
+Implementation-Version: 0.0.1-SNAPSHOT
+Implementation-Vendor-Id: com.neuedu
+Main-Class: ${start-class}
+

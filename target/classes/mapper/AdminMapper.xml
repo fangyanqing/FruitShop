@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neuedu.fruitshop.sys.mapper.AdminMapper">
+
+    <resultMap type="Admin" id="adminMap">
+		<id column="adminId" property="adminId" />
+		<result column="adminName" property="adminName" />
+		<result column="adminPwd" property="adminPwd" />
+		<result column="adminSex" property="adminSex" />
+		<result column="adminPhone" property="adminPhone" />
+		<result column="adminEmail" property="adminEmail" />
+		<result column="adminAddress" property="adminAddress" />
+		<result column="adminRole" property="adminRole" />
+	</resultMap>
+<!-- 自己的 -->
+	<sql id="selectsql">
+		select adminId , adminName, adminPwd , adminSex, adminImage, 
+			adminPhone, adminEmail, adminAddress, adminRole
+		from admin
+	</sql>
+	
+	<select id="login" parameterType="Admin" resultMap="adminMap">
+		<include refid="selectsql" />
+		where adminName = #{adminName} and adminPwd = #{adminPwd}
+	</select>
+
+	<select id="findListByPager" parameterType="Pager" resultType="Admin">
+		<include refid="selectsql" />
+		<where>
+			<if test="condition != null"> 
+				<!-- 按ID查询个人信息 -->
+				<if test="condition.adminId != null">
+			  		and adminId = #{condition.adminId}
+				</if>
+				<!-- 按姓名 -->
+				<if test="condition.adminName != null and condition.adminName != ''">
+			  		adminName like concat('%',concat(#{condition.adminName},'%')) 
+				</if>
+				<!-- 按性别 -->
+				<if test="condition.adminSex != null and condition.adminSex != ''">
+			  		and adminSex = #{condition.adminSex}
+				</if>
+				<!-- 按角色 -->
+				<if test="condition.adminRole != null">
+			  		and adminRole = #{condition.adminRole}
+				</if>
+		    </if>
+		</where>
+		limit #{start},#{size}
+	</select>
+	
+	<select id="findTotalByPager" parameterType="Pager" resultType="int">
+		select count(*) from admin
+		<where>
+			<if test="condition != null"> 
+				<!-- 按ID查询个人信息 -->
+				<if test="condition.adminId != null">
+			  		and adminId = #{condition.adminId}
+				</if>
+				<!-- 按姓名 -->
+				<if test="condition.adminName != null and condition.adminName != ''">
+			  		adminName like concat('%',concat(#{condition.adminName},'%')) 
+				</if>
+				<!-- 按性别 -->
+				<if test="condition.adminSex != null and condition.adminSex != ''">
+			  		and adminSex = #{condition.adminSex}
+				</if>
+				<!-- 按角色 -->
+				<if test="condition.adminRole != null">
+			  		and adminRole = #{condition.adminRole}
+				</if>
+		    </if>
+		</where>
+	</select>
+	
+	 <insert id="add" parameterType="Admin">
+		insert into admin(adminName,adminPwd,adminSex,adminImage,adminPhone,adminEmail,adminAddress,adminRole)
+		values(#{adminName},#{adminPwd},#{adminSex},#{adminImage},#{adminPhone},#{adminEmail},#{adminAddress},#{adminRole})
+		<!-- goods_id是自增列，可以通过selectkey 查询自增列的值，并绑定到对于的属性中 -->
+		<selectKey keyColumn="adminId" keyProperty="adminId"
+			order="AFTER" resultType="int">
+			select last_insert_id()
+		</selectKey>
+	</insert>
+	
+	<update id="edit" parameterType="Admin">
+		update admin
+		<set>
+			<if test="adminName != null and adminName != ''"> adminName = #{adminName}, </if>
+			<if test="adminPwd != null and adminPwd != ''"> adminPwd = #{adminPwd}, </if>
+			<if test="adminSex != null and adminSex != ''"> adminSex = #{adminSex}, </if>
+			<if test="adminImage != null and adminImage != ''"> adminImage = #{adminImage}, </if>
+			
+			<if test="adminPhone != null and adminPhone != ''"> adminPhone = #{adminPhone}, </if>
+			<if test="adminEmail != null and adminEmail != ''"> adminEmail = #{adminEmail}, </if>
+			<if test="adminAddress != null and adminAddress != ''"> adminAddress = #{adminAddress}, </if>
+			<if test="adminRole != null and adminRole != ''"> adminRole = #{adminRole}, </if>
+		</set>
+		where adminId = #{adminId}
+	</update>
+	
+	<!-- 逻辑删除表的状态 -->
+	<delete id="deleteByIds" parameterType="list">
+		<if test="list != null and list.size != 0">
+			delete from admin where adminId in
+			<foreach collection="list" item="admin" open="(" separator="," close=")">
+				#{admin.adminId}
+			</foreach>
+		</if>
+	</delete> 
+
+</mapper>

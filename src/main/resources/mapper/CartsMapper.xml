@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neuedu.fruitshop.web.mapper.CartsMapper">
+ 	<!-- orm对象映射和关系映射 -->
+ 	<resultMap type="Carts" id="cartsMap">
+ 	    <id column="cartsId" property="cartsId"/>
+ 	    
+	 	<!-- 对于关系映射可以使用association或collection进行配置 -->
+		<association property="user">
+			<result column="userId" property="userId" />
+			<result column="userName" property="userName" />			
+		</association>
+ 	</resultMap>
+
+	<select id="findCartsByUser"  parameterType="Carts" resultMap="cartsMap">	
+	   SELECT
+		carts.cartsId,user.userId
+		FROM
+		carts,user
+		where 
+		carts.userId = user.userId and user.userId=#{userId}	
+	</select>
+
+</mapper>

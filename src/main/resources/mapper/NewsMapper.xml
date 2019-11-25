@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neuedu.fruitshop.sys.mapper.NewsMapper">
+	<resultMap type="News" id="newsMap">
+		<id column="newsId" property="newsId" />
+		<result column="newsTitle" property="newsTitle" />
+		<result column="content" property="content" />
+		<result column="time" property="time" />
+		<!-- 对于关系映射可以使用association或collection进行配置 -->
+		<association property="admin">
+			<result column="adminId" property="adminId" />
+			<result column="adminName" property="adminName" />					
+		</association>
+	</resultMap>
+	
+	<select id="findListByPager" parameterType="Pager"
+		resultMap="newsMap">				
+			select n.newsId,n.newsTitle,n.content,n.time,a.adminName from news n 
+			left join admin a on n.adminId=a.adminId order by n.newsId desc limit #{start},#{size}
+	</select> 
+	
+	<insert id="add" parameterType="News">
+		insert into news(newsTitle,content,time,adminId)
+		values(#{newsTitle},#{content},#{time},#{admin.adminId})
+		<!-- goods_id是自增列，可以通过selectkey 查询自增列的值，并绑定到对于的属性中 -->
+		<selectKey keyColumn="newsId" keyProperty="newsId"
+			order="AFTER" resultType="int">
+			select last_insert_id()
+		</selectKey>
+	</insert> 	
+	
+	<update id="edit" parameterType="News">
+		update news
+		<set>
+			<if test="newsTitle !=null"> newsTitle = #{newsTitle},</if>
+			<if test="content !=null"> content = #{content},</if>
+			<if test="time !=null"> time = #{time},</if>	
+			<if test="admin !=null and admin.adminId != null"> adminId = #{admin.adminId},</if>			
+			<!-- <if test="housetype !=null and housetype.typeId"> type_id = #{housetype.typeId},</if> -->
+		</set>
+		where newsId = #{newsId}
+	</update>
+	
+	<delete id="deleteByIds" parameterType="list">
+		<if test="list!=null and list.size !=0">
+			delete from news where newsId in
+			<foreach collection="list" item="news" open="("
+				separator="," close=")">
+				#{news.newsId}
+			</foreach>
+		</if>
+	</delete>
+
+</mapper>

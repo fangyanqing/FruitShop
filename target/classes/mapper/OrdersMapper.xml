@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neuedu.fruitshop.sys.mapper.OrdersMapper">
+ 	<!-- orm对象映射和关系映射 -->
+ 	<resultMap type="Orders" id="ordersMap">
+ 	    <id column="orderId" property="orderId"/>
+ 	    <result column="createTime" property="createTime" />
+ 	    <result column="payTime" property="payTime" />
+ 	    <result column="deliverTime" property="deliverTime" />
+ 	    <result column="receiverTime" property="receiverTime" />
+ 	    <result column="orderState" property="orderState" />
+	 	<!-- 对于关系映射可以使用association或collection进行配置 -->
+		<association property="user">
+			<result column="userId" property="userId" />
+			<result column="userName" property="userName" />			
+		</association>
+		<association property="address">
+			<result column="addressId" property="addressId" />
+			<result column="address" property="address" />
+			<result column="consignee" property="consignee" />
+			<result column="phone" property="phone" />	
+		</association>
+ 	</resultMap>
+
+</mapper>

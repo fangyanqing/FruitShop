@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neuedu.fruitshop.sys.mapper.ProviderMapper">
+<resultMap type="Provider" id="providerMap">
+	<!-- id一般用于配置主键列 -->
+	<id column="providerId" property="providerId" />
+	<result column="providerName" property="providerName" />
+	<result column="providerPhone" property="providerPhone" />
+	<result column="providerAddress" property="providerAddress" />
+	<result column="providerImage" property="providerImage" />
+	<result column="providerStates" property="providerStates" />
+	
+	<!-- 对于关系映射可以使用association或collection进行配置 -->
+	<association property="admin">
+		<result column="adminId" property="adminId" />
+		<result column="adminName" property="adminName" />
+	</association>
+</resultMap>
+
+<sql id="selectsql">
+	select p.*,a.adminName 
+	from provider p 
+	LEFT JOIN admin a 
+	on p.adminId=a.adminId
+</sql>
+
+<select id="findAll" resultType="Provider">
+	<include refid="selectsql" />
+</select>
+
+<!-- <select id="findListByPager" parameterType="Pager" resultMap="providerMap">
+	select p.*,a.adminName 
+	from provider p 
+	LEFT JOIN admin a 
+	on p.adminId=a.adminId
+	order by p.providerId desc limit #{start},#{size}
+</select> -->
+
+<select id="findListByPager" parameterType="Pager"
+		resultMap="providerMap">
+		select p.*,a.adminName from provider p , admin a 
+		<where>
+		 p.adminId=a.adminId
+		<if test="condition !=null and condition.providerName != null"> 
+		and
+		CONCAT(providerName,providerPhone,providerAddress,adminName) like concat('%',concat(#{condition.providerName},'%')) 
+		</if>
+		</where>
+		 order by p.providerId desc limit #{start},#{size}	
+</select>
+
+
+
+<!-- sql映射可以在接口中使用注解方式进行声明，具体参考GoodsMapper的findTotal方法及mybatis相关文档 -->
+<insert id="add" parameterType="Provider">
+	insert into provider(providerName,providerPhone,providerAddress,providerImage,providerStates,adminId)
+	values(#{providerName},#{providerPhone},#{providerAddress},#{providerImage},#{providerStates},#{admin.adminId})
+	<!-- goods_id是自增列，可以通过selectkey 查询自增列的值，并绑定到对于的属性中 -->
+	<selectKey keyColumn="providerId" keyProperty="providerId"
+		order="AFTER" resultType="int">
+		select last_insert_id()
+	</selectKey>
+</insert>
+
+
+<update id="edit" parameterType="Provider">
+	update provider
+	<set>
+		<if test="providerName !=null"> providerName = #{providerName},</if>
+		<if test="providerPhone !=null"> providerPhone = #{providerPhone},</if>
+		<if test="providerAddress !=null"> providerAddress = #{providerAddress},</if>
+		<if test="providerImage !=null"> providerImage = #{providerImage},</if>
+		<if test="providerStates !=null"> providerStates = #{providerStates},</if>
+		<if test="admin !=null and admin.adminId"> adminId = #{admin.adminId},</if>
+	</set>
+	where providerId = #{providerId}
+</update>
+
+
+<!--修改状态  -->
+<update id="edits" parameterType="Provider">
+ update provider
+	<set>		
+		<if test="providerStates !=null"> providerStates = #{providerStates},</if>	
+	</set>
+	where providerId = #{providerId}
+</update>
+
+
+<delete id="deleteByIds" parameterType="list">
+	<if test="list!=null and list.size !=0">
+		delete from provider where providerId in
+		<foreach collection="list" item="provider" open="("
+			separator="," close=")">
+			#{provider.providerId}
+		</foreach>
+	</if>
+</delete>
+
+
+
+
+
+
+</mapper>
+
+
+

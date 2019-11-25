@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neuedu.fruitshop.web.mapper.IndexShowMapper">
+
+<!-- orm对象映射和关系映射 -->
+	<resultMap type="Fruit" id="fruitMap">
+		<!-- id一般用于配置主键列 -->
+		<id column="fruitId" property="fruitId" />
+		<result column="fruitName" property="fruitName" />
+		<result column="fruitImage" property="fruitImage" />
+		<result column="fruitPrice" property="fruitPrice" />
+		<result column="fruitUnit" property="fruitUnit" />
+		<result column="putawayTime" property="putawayTime" />
+		<result column="fruitStates" property="fruitStates" />
+		<!-- 对于关系映射可以使用association或collection进行配置 -->
+		<association property="type">
+			<result column="typeId" property="typeId" />
+			<result column="typeName" property="typeName" />
+		</association>
+		<association property="provider">
+			<result column="providerId" property="providerId" />
+			<result column="providerName" property="providerName" />
+		</association>
+		<association property="admin">
+			<result column="adminId" property="adminId" />
+			<result column="adminName" property="adminName" />			
+		</association>
+	</resultMap>
+	
+	<!-- 前台 -->
+	<!-- 查询最新5条记录 -->
+	<select id="findNewest" resultMap="fruitMap">
+		SELECT fruitId,fruitName,fruitImage,fruitPrice,putawayTime,fruitUnit
+		     from fruit 
+		        order BY putawayTime DESC 
+		     LIMIT 5
+	</select>
+	<!-- 查询最新5条记录 -->
+	<select id="findPromotion" resultMap="fruitMap">
+		SELECT fruitId,fruitName,fruitImage,fruitPrice,putawayTime,fruitUnit from fruit 
+		    <where>
+		            fruitPrice &lt;=8
+		    </where>
+		        order BY putawayTime DESC 
+		     LIMIT 5
+	</select>
+	
+	<select id="findByType" resultMap="fruitMap">
+		SELECT f.*,t.typeName from fruit f, type t where  f.typeId=t.typeId
+		      and t.typeId=#{type.typeId}
+	</select>
+  
+
+</mapper>

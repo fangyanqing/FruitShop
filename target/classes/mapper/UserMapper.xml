@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neuedu.fruitshop.sys.mapper.UserMapper">
+
+    <resultMap type="User" id="userMap">
+		<id column="userId" property="userId" />
+		<result column="userName" property="userName" />
+		<result column="nickName" property="nickName" />
+		<result column="userPwd" property="userPwd" />
+		<result column="userSex" property="userSex" />
+		<result column="userImage" property="userImage" />
+		
+		<result column="userPhone" property="userPhone" />
+		<result column="userEmail" property="userEmail" />
+		<result column="userAddress" property="userAddress" />
+	</resultMap>
+<!-- 自己的 -->
+<sql id="selectsql">
+	select 
+	userId,userName,nickName,userPwd,userSex,userImage,userPhone,userEmail,userAddress
+	from user
+	</sql>
+	
+	<select id="login" parameterType="User" resultMap="userMap">
+		<include refid="selectsql" />
+		where userName = #{userName} and userPwd = #{userPwd}
+	</select>
+	
+	<select id="checkUserName" parameterType="User" resultMap="userMap">
+		<include refid="selectsql" />
+		where userName = #{userName} 
+	</select>
+	
+	<select id="findUserById" parameterType="User" resultMap="userMap">
+		<include refid="selectsql" />
+		where userId = #{userId}
+	</select>
+	
+	<select id="findListByPager" parameterType="Pager"
+		resultType="User">
+		<include refid="selectsql" />
+		<where>
+			  <if test="condition !=null and (condition.userName!= null or condition.nickName!= null)">
+			   and (userName like concat('%',concat(#{condition.userName},'%')) 
+			    or
+			    nickName like concat('%',concat(#{condition.nickName},'%')) )
+			  </if>
+		</where>
+		limit #{start},#{size}
+	</select>
+
+	<select id="findTotalByPager" parameterType="Pager"
+		resultType="int">
+		select count(*) from user
+			
+<!-- 		<where>
+			  <if test="condition !=null and (condition.userName!= null or condition.nickName!= null)">
+			   and (userName like concat('%',concat(#{condition.userName},'%')) 
+			    or
+			    nickName like concat('%',concat(#{condition.nickName},'%')) )
+			  </if>
+		</where> -->
+	</select>
+	
+	<insert id="add" parameterType="User">
+		insert into user(userName,nickName,userPwd,userSex,userImage,userPhone,userEmail,userAddress)
+		values(#{userName},#{nickName},#{userPwd},#{userSex},#{userImage},#{userPhone},#{userEmail},#{userAddress})
+		<!-- goods_id是自增列，可以通过selectkey 查询自增列的值，并绑定到对于的属性中 -->
+		<selectKey keyColumn="userId" keyProperty="userId" order="AFTER" resultType="int">
+			select last_insert_id()
+		</selectKey>
+	</insert>
+	
+	<update id="edit" parameterType="User">
+		update user
+		<set>
+			<!-- 用户名不可修改 -->
+			<!-- <if test="userName != null and userName != ''"> userName = #{userName}, </if> -->
+			<if test="nickName != null and nickName != ''"> nickName = #{nickName},</if>
+			<!-- 密码分开改 -->
+			<!-- <if test="userPwd != null and userPwd != ''"> userPwd = #{userPwd}, </if> -->
+			<if test="userSex != null and userSex != ''"> userSex = #{userSex}, </if>
+			<if test="userImage != null and userImage != ''"> userImage = #{userImage}, </if>
+			<if test="userPhone != null and userPhone != ''"> userPhone = #{userPhone}, </if>
+			<if test="userEmail != null and userEmail != ''"> userEmail = #{userEmail}, </if>
+			<if test="userAddress != null and userAddress != ''"> userAddress = #{userAddress} </if>
+		</set>
+		where userId = #{userId}
+	</update>
+	
+	<update id="editUserPwd" parameterType="User">
+		update user
+		<set>
+			<if test="userPwd != null and userPwd != ''"> userPwd = #{userPwd}</if>
+		</set>
+		where userId = #{userId}
+	</update>
+	
+	
+	<delete id="deleteByIds" parameterType="list">
+		<if test="list!=null and list.size !=0">
+			DELETE from users where userid in
+			<foreach collection="list" item="users" open="("
+				separator="," close=")">
+				#{users.userId}
+			</foreach>
+		</if>
+	</delete>
+
+
+</mapper>

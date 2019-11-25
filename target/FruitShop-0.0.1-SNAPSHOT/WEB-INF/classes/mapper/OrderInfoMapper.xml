@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neuedu.fruitshop.sys.mapper.OrderInfoMapper">
+ 	<!-- orm对象映射和关系映射 -->
+ 	<resultMap type="OrderInfo" id="orderInfoMap">
+ 	    <id column="oInfoId" property="oInfoId"/>
+ 	    <result column="fruitName" property="fruitName" />
+ 	    <result column="price" property="price" />
+ 	    <result column="orderNum" property="orderNum" />
+ 	    <result column="tips" property="tips" />
+
+	 	<!-- 对于关系映射可以使用association或collection进行配置 -->
+		<association property="orders">
+			<result column="orderId" property="orderId"/>
+	 	    <result column="createTime" property="createTime" />
+	 	    <result column="payTime" property="payTime" />
+	 	    <result column="deliverTime" property="deliverTime" />
+	 	    <result column="receiverTime" property="receiverTime" />
+	 	    <result column="orderState" property="orderState" />	
+	 	    <association property="user">
+				<result column="userId" property="userId" />
+				<result column="userName" property="userName" />			
+			</association>
+			<association property="address">
+				<result column="addressId" property="addressId" />
+				<result column="address" property="address" />
+				<result column="consignee" property="consignee" />
+				<result column="phone" property="phone" />	
+			</association>	
+		</association>
+ 	</resultMap>
+
+	<select id="findListByPager" parameterType="Pager" resultMap="orderInfoMap">
+		SELECT
+		orderinfo.oInfoId,orderinfo.fruitName,orderinfo.price,orderinfo.orderNum,orderinfo.tips,
+			orders.orderId,orders.userId,orders.createTime,orders.deliverTime,orders.receiverTime,orders.orderState,orders.payTime,
+		orders.addressId,address.address,address.consignee,address.phone,address.userId
+			FROM orderinfo
+		INNER JOIN orders ON orderinfo.orderId = orders.orderId
+			INNER JOIN address ON orders.addressId = address.addressId
+		 ORDER BY orders.createTime DESC
+			LIMIT #{start},#{size}
+	</select>
+	
+	<select id="findTotalByPager" parameterType="Pager" resultType="int">
+		SELECT COUNT(*)
+			FROM orderinfo
+		INNER JOIN orders ON orderinfo.orderId = orders.orderId
+			INNER JOIN address ON orders.addressId = address.addressId
+		ORDER BY orders.createTime DESC
+	</select>
+	
+	
+</mapper>

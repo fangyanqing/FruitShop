@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neuedu.fruitshop.sys.mapper.CommentMapper">
+
+<resultMap type="Comment" id="commentMap">
+	<!-- id一般用于配置主键列 -->
+	<id column="commentId" property="commentId" />
+	<result column="commentLevel" property="commentLevel" />
+	<result column="commentText" property="commentText" />
+	<result column="commentTime" property="commentTime" />
+	<result column="commentStates" property="commentStates" />
+	<result column="commentReason" property="commentReason" />
+	
+	<association property="user">
+		<result column="userId" property="userId" />
+		<result column="userName" property="userName" />
+	</association>
+	
+	<association property="fruit">
+		<result column="fruitId" property="fruitId" />
+		<result column="fruitName" property="fruitName" />
+	</association>
+	
+	<!-- 对于关系映射可以使用association或collection进行配置 -->
+	<association property="admin">
+		<result column="adminId" property="adminId" />
+		<result column="adminName" property="adminName" />
+	</association>
+</resultMap>
+
+<sql id="selectsql">
+	select c.*,u.userName,f.fruitName,a.adminName
+	from comment c 
+	LEFT JOIN user u on c.userId=u.userId 
+	LEFT JOIN fruit f on c.fruitId=f.fruitId
+	LEFT JOIN admin a on c.adminId=a.adminId
+</sql>
+<select id="findAll" resultType="Comment">
+	<include refid="selectsql" />
+</select>
+
+<select id="findListByPager" parameterType="Pager"
+		resultMap="commentMap">
+		select c.*,u.userName,f.fruitName,a.adminName from comment c, user u,fruit f,admin a
+		<where>
+		 c.userId=u.userId and c.fruitId=f.fruitId and c.adminId=a.adminId
+		<if test="condition !=null and condition.commentStates != null"> 
+		and
+		commentStates like concat('%',concat(#{condition.commentStates},'%')) 
+		</if>
+		</where>
+		 order by c.commentId desc limit #{start},#{size}	
+</select>
+
+<insert id="add" parameterType="Comment">
+	insert into comment(commentLevel,commentText,commentTime,userId,fruitId,commentStates,adminId,commentReason)
+	values(#{commentLevel},#{commentText},#{commentTime},#{user.userId},#{fruit.fruitId},#{commentStates},#{admin.adminId},#{commentReason})
+	<!-- goods_id是自增列，可以通过selectkey 查询自增列的值，并绑定到对于的属性中 -->
+	<selectKey keyColumn="commentId" keyProperty="commentId"
+		order="AFTER" resultType="int">
+		select last_insert_id()
+	</selectKey>
+</insert>
+
+<!--修改评论状态  -->
+<update id="edit" parameterType="Comment">
+	update comment
+	<set>
+		<if test="commentStates !=null"> commentStates = #{commentStates},</if>
+		<if test="admin !=null and admin.adminId"> adminId = #{admin.adminId},</if>
+		<if test="commentReason !=null"> commentReason = #{commentReason},</if>
+	</set>
+	where commentId = #{commentId}
+</update>
+
+<delete id="deleteByIds" parameterType="list">
+	<if test="list!=null and list.size !=0">
+		delete from comment where commentId in
+		<foreach collection="list" item="comment" open="("
+			separator="," close=")">
+			#{comment.commentId}
+		</foreach>
+	</if>
+</delete>
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
